@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pixever AI Studio</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0f0f0f;
+      color: #ffffff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+    .card {
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .card h2 {
+      margin-top: 0;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      margin-top: 8px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #00c6ff;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background-color: #00aee0;
+    }
+    video {
+      width: 100%;
+      margin-top: 20px;
+      border-radius: 10px;
+    }
+    .result {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎬 Pixever AI - Creative Studio</h1>
+
+    <!-- Text to Video -->
+    <div class="card">
+      <h2>📝 Text to Video</h2>
+      <label for="textInput">Masukkan Teks</label>
+      <textarea id="textInput" rows="4" placeholder="Contoh: Pemandangan pegunungan saat matahari terbenam..."></textarea>
+      <button onclick="generateTextToVideo()">Generate Video</button>
+      <div id="textResult" class="result"></div>
+    </div>
+
+    <!-- Image to Video (2 Gambar) -->
+    <div class="card">
+      <h2>🖼️ Image to Video (2 Gambar)</h2>
+      <label for="image1">Upload Gambar Pertama</label>
+      <input type="file" id="image1" accept="image/*">
+      <label for="image2">Upload Gambar Kedua</label>
+      <input type="file" id="image2" accept="image/*">
+      <button onclick="generateImageToVideo()">Generate Video</button>
+      <div id="imageResult" class="result"></div>
+    </div>
+
+    <!-- Transisi -->
+    <div class="card">
+      <h2>🔁 Transisi Video</h2>
+      <label for="transitionType">Pilih Jenis Transisi</label>
+      <select id="transitionType">
+        <option value="fade">Fade</option>
+        <option value="slide">Slide</option>
+        <option value="zoom">Zoom</option>
+      </select>
+      <button onclick="generateTransition()">Apply Transition</button>
+      <div id="transitionResult" class="result"></div>
+    </div>
+  </div>
+
+  <script>
+    const apiKey = "sk-4c7c78df569a716583690e9ffe8fcc19"; // Ganti dengan API Key kamu
+    const apiBase = "https://api.pixever.ai"; // Ganti sesuai base URL
+
+    async function generateTextToVideo() {
+      const text = document.getElementById("textInput").value.trim();
+      const resultDiv = document.getElementById("textResult");
+      if (!text) return alert("Masukkan teks terlebih dahulu.");
+
+      resultDiv.innerHTML = "⏳ Generating video...";
+      try {
+        const response = await fetch(`${apiBase}/text-to-video`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await response.json();
+        resultDiv.innerHTML = `<video controls src="${data.video_url}"></video>`;
+      } catch (error) {
+        resultDiv.innerHTML = "❌ Gagal menghasilkan video.";
+      }
+    }
+
+    async function generateImageToVideo() {
+      const img1 = document.getElementById("image1").files[0];
+      const img2 = document.getElementById("image2").files[0];
+      const resultDiv = document.getElementById("imageResult");
+      if (!img1 || !img2) return alert("Upload dua gambar.");
+
+      const formData = new FormData();
+      formData.append("image1", img1);
+      formData.append("image2", img2);
+
+      resultDiv.innerHTML = "⏳ Generating video from images...";
+      try {
+        const response = await fetch(`${apiBase}/image-to-video`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+        resultDiv.innerHTML = `<video controls src="${data.video_url}"></video>`;
+      } catch (error) {
+        resultDiv.innerHTML = "❌ Gagal membuat video dari gambar.";
+      }
+    }
+
+    async function generateTransition() {
+      const transition = document.getElementById("transitionType").value;
+      const resultDiv = document.getElementById("transitionResult");
+      resultDiv.innerHTML = "⏳ Applying transition...";
+
+      try {
+        const response = await fetch(`${apiBase}/video-transition`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({ transition_type: transition })
+        });
+
+        const data = await response.json();
+        resultDiv.innerHTML = `<video controls src="${data.video_url}"></video>`;
+      } catch (error) {
+        resultDiv.innerHTML = "❌ Gagal menerapkan transisi.";
+      }
+    }
+  </script>
+</body>
+</html>
